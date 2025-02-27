@@ -86,6 +86,14 @@ pub enum ClientOrder {
     Trigger(ClientTrigger),
 }
 
+/// Asset: the asset attempting to be bought, represented by a string such as BASE/QUOTE
+/// is_buy: whether we are buying or selling the base currency base on the Side type - either bid or ask.
+/// reduce_only: reduce only orders adjust or reduce current position to match the size of the current open position.
+/// limit_px: The price willing to bid or ask, here we round up if selling to get maximum price and down if we are bidding to make sure 
+/// sz: The amount of the asset wishing to be purchased, this is always rounded down if bidding to make sure we don't over spend and up if we are asking to make sure we sell whole tokens.
+/// Limit price and order size rely on the fork as initially this was f64 which we chose to remove due to precision errors
+/// cloid: Central limit order id, for HyperLiquid this is optional but in order to query and track transactions, thus providing meaning this will be the order id designated from the OMS.
+/// order_type - tif: the order type wishing to be performed, this system will always support Ioc - Immediate or Cancel.
 #[derive(Debug)]
 pub struct ClientOrderRequest {
     pub asset: String,
