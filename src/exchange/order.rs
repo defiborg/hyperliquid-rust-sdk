@@ -105,9 +105,13 @@ pub struct ClientOrderRequest<T = f64> {
     pub order_type: ClientOrder,
 }
 
-impl ClientOrderRequest<f64>
+pub trait ConvertOrder {
+    fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest>;
+}
+
+impl ConvertOrder for ClientOrderRequest<f64>
 {
-    pub(crate) fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
+    fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),
             ClientOrder::Trigger(trigger) => Order::Trigger(Trigger {
@@ -132,8 +136,8 @@ impl ClientOrderRequest<f64>
     }
 }
 
-impl ClientOrderRequest<String> {
-    pub(crate) fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
+impl ConvertOrder for ClientOrderRequest<String> {
+    fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),
             ClientOrder::Trigger(trigger) => Order::Trigger(Trigger {
@@ -142,6 +146,7 @@ impl ClientOrderRequest<String> {
                 tpsl: trigger.tpsl,
             }),
         };
+        
         let &asset = coin_to_asset.get(&self.asset).ok_or(Error::AssetNotFound)?;
 
         let cloid = self.cloid.map(uuid_to_hex_string);
@@ -164,6 +169,7 @@ mod test {
 
     use super::{ClientLimit, ClientOrder, ClientOrderRequest};
     use std::collections::HashMap;
+    use crate::exchange::order::ConvertOrder;
 
     #[test]
     fn test_f64_client_order_request() {

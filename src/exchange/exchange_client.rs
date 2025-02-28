@@ -29,7 +29,7 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 use super::cancel::ClientCancelRequestCloid;
-use super::order::{MarketCloseParams, MarketOrderParams};
+use super::order::{ConvertOrder, MarketCloseParams, MarketOrderParams};
 use super::{BuilderInfo, ClientLimit, ClientOrder};
 
 #[derive(Debug)]
@@ -380,11 +380,11 @@ impl ExchangeClient {
         Ok((px, sz_decimals))
     }
 
-    pub async fn order(
+    pub async fn order<T>(
         &self,
-        order: ClientOrderRequest,
+        order: ClientOrderRequest<T>,
         wallet: Option<&LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> {
+    ) -> Result<ExchangeResponseStatus> where ClientOrderRequest<T>: ConvertOrder {
         self.bulk_order(vec![order], wallet).await
     }
 
@@ -398,11 +398,11 @@ impl ExchangeClient {
             .await
     }
 
-    pub async fn bulk_order(
+    pub async fn bulk_order<T>(
         &self,
-        orders: Vec<ClientOrderRequest>,
+        orders: Vec<ClientOrderRequest<T>>,
         wallet: Option<&LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> {
+    ) -> Result<ExchangeResponseStatus> where ClientOrderRequest<T>: ConvertOrder {
         let wallet = wallet.unwrap_or(&self.wallet);
         let timestamp = next_nonce();
 
