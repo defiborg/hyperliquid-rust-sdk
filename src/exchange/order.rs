@@ -47,12 +47,12 @@ pub struct OrderRequest {
     pub cloid: Option<String>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ClientLimit {
     pub tif: String,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ClientTrigger {
     pub is_market: bool,
     pub trigger_px: f64,
@@ -80,7 +80,7 @@ pub struct MarketCloseParams<'a> {
     pub wallet: Option<&'a LocalWallet>,
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum ClientOrder {
     Limit(ClientLimit),
     Trigger(ClientTrigger),
@@ -94,7 +94,7 @@ pub enum ClientOrder {
 /// Limit price and order size rely on the fork as initially this was f64 which we chose to remove due to precision errors
 /// cloid: Central limit order id, for HyperLiquid this is optional but in order to query and track transactions, thus providing meaning this will be the order id designated from the OMS.
 /// order_type - tif: the order type wishing to be performed, this system will always support Ioc - Immediate or Cancel.
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct ClientOrderRequest<T = f64> {
     pub asset: String,
     pub is_buy: bool,
