@@ -422,6 +422,7 @@ impl ExchangeClient {
 
     /// This works in our instance, however this does mean that wallet and self share the same lifetime? Which means we create a reference to wallet at the same time as the exchange client then we are all fine
     /// In our instance we create wallet and exchange client at similar times therefore the lifetime is valid
+    /// Also wallet is not used here in this instance, we pass none into this function and used the wallet created at instantiation
     pub fn build_order<'a, T>(&'a self, orders: Vec<ClientOrderRequest<T>> ,wallet: Option<&'a LocalWallet>) -> Result<BuiltOrderResponse<'a>> where ClientOrderRequest<T>: ConvertOrder {
         let wallet = wallet.unwrap_or(&self.wallet);
         
