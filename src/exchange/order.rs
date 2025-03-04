@@ -109,8 +109,7 @@ pub trait ConvertOrder {
     fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest>;
 }
 
-impl ConvertOrder for ClientOrderRequest<f64>
-{
+impl ConvertOrder for ClientOrderRequest<f64> {
     fn convert(self, coin_to_asset: &HashMap<String, u32>) -> Result<OrderRequest> {
         let order_type = match self.order_type {
             ClientOrder::Limit(limit) => Order::Limit(Limit { tif: limit.tif }),
@@ -146,7 +145,7 @@ impl ConvertOrder for ClientOrderRequest<String> {
                 tpsl: trigger.tpsl,
             }),
         };
-        
+
         let &asset = coin_to_asset.get(&self.asset).ok_or(Error::AssetNotFound)?;
 
         let cloid = self.cloid.map(uuid_to_hex_string);
@@ -165,15 +164,17 @@ impl ConvertOrder for ClientOrderRequest<String> {
 
 #[cfg(test)]
 mod test {
-    use crate::{exchange::order::{Limit, OrderRequest}, Order};
+    use crate::{
+        exchange::order::{Limit, OrderRequest},
+        Order,
+    };
 
     use super::{ClientLimit, ClientOrder, ClientOrderRequest};
-    use std::collections::HashMap;
     use crate::exchange::order::ConvertOrder;
+    use std::collections::HashMap;
 
     #[test]
     fn test_f64_client_order_request() {
-
         let test_asset = "XYZTWO/USDC".to_string();
         let coin_to_asset: &mut HashMap<std::string::String, u32> = &mut HashMap::new();
         coin_to_asset.insert(test_asset.clone(), 123);
@@ -200,7 +201,9 @@ mod test {
                 limit_px: "2.0202".to_string(),
                 sz: "1.0001".to_string(),
                 reduce_only: false,
-                order_type: Order::Limit(Limit { tif: "Gtc".to_string() }),
+                order_type: Order::Limit(Limit {
+                    tif: "Gtc".to_string()
+                }),
                 cloid: None
             }
         );
@@ -233,7 +236,9 @@ mod test {
                 limit_px: "2.000".to_string(),
                 sz: "3.0000".to_string(),
                 reduce_only: false,
-                order_type: Order::Limit(Limit { tif: "Gtc".to_string() }),
+                order_type: Order::Limit(Limit {
+                    tif: "Gtc".to_string()
+                }),
                 cloid: None
             }
         );

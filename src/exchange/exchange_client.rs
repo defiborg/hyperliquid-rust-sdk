@@ -38,7 +38,7 @@ use super::{BuilderInfo, ClientLimit, ClientOrder};
 pub struct BuiltOrderResponse<'a> {
     timestamp: u64,
     wallet: &'a Wallet<SigningKey>,
-    actions: Actions
+    actions: Actions,
 }
 
 #[derive(Debug)]
@@ -393,7 +393,10 @@ impl ExchangeClient {
         &self,
         order: ClientOrderRequest<T>,
         wallet: Option<&'a LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> where ClientOrderRequest<T>: ConvertOrder {
+    ) -> Result<ExchangeResponseStatus>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
         self.bulk_order(vec![order], wallet).await
     }
 
@@ -411,21 +414,33 @@ impl ExchangeClient {
         &self,
         orders: Vec<ClientOrderRequest<T>>,
         wallet: Option<&'a LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> where ClientOrderRequest<T>: ConvertOrder {
-
+    ) -> Result<ExchangeResponseStatus>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
         let built_order_response = self.build_order(orders, wallet)?;
-        
-        let (signature, action_value) = self.generate_signature_for_transaction(&built_order_response)?;
-        
-        Ok(self.send_signed_order(action_value, built_order_response.timestamp, signature).await?)
+
+        let (signature, action_value) =
+            self.generate_signature_for_transaction(&built_order_response)?;
+
+        Ok(self
+            .send_signed_order(action_value, built_order_response.timestamp, signature)
+            .await?)
     }
 
     /// This works in our instance, however this does mean that wallet and self share the same lifetime? Which means we create a reference to wallet at the same time as the exchange client then we are all fine
     /// In our instance we create wallet and exchange client at similar times therefore the lifetime is valid
     /// Also wallet is not used here in this instance, we pass none into this function and used the wallet created at instantiation
-    pub fn build_order<'a, T>(&'a self, orders: Vec<ClientOrderRequest<T>> ,wallet: Option<&'a LocalWallet>) -> Result<BuiltOrderResponse<'a>> where ClientOrderRequest<T>: ConvertOrder {
+    pub fn build_order<'a, T>(
+        &'a self,
+        orders: Vec<ClientOrderRequest<T>>,
+        wallet: Option<&'a LocalWallet>,
+    ) -> Result<BuiltOrderResponse<'a>>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
         let wallet = wallet.unwrap_or(&self.wallet);
-        
+
         let mut transformed_orders = Vec::new();
 
         for order in orders {
@@ -439,24 +454,38 @@ impl ExchangeClient {
         });
 
         let timestamp = next_nonce();
-        
+
         Ok(BuiltOrderResponse {
             timestamp,
             wallet,
-            actions
+            actions,
         })
     }
 
-    pub async fn send_signed_order(&self, action: Value, timestamp: u64, signature: Signature ) -> Result<ExchangeResponseStatus> {
+    pub async fn send_signed_order(
+        &self,
+        action: Value,
+        timestamp: u64,
+        signature: Signature,
+    ) -> Result<ExchangeResponseStatus> {
         Ok(self.post(action, signature, timestamp).await?)
     }
 
-    pub fn generate_signature_for_transaction(&self, built_order: &BuiltOrderResponse) -> Result<(Signature, Value)> {
-        let connection_id = built_order.actions.hash(built_order.timestamp, self.vault_address)?;
-        let action = serde_json::to_value(&built_order.actions).map_err(|e| Error::JsonParse(e.to_string()))?;
+    pub fn generate_signature_for_transaction(
+        &self,
+        built_order: &BuiltOrderResponse,
+    ) -> Result<(Signature, Value)> {
+        let connection_id = built_order
+            .actions
+            .hash(built_order.timestamp, self.vault_address)?;
+        let action = serde_json::to_value(&built_order.actions)
+            .map_err(|e| Error::JsonParse(e.to_string()))?;
 
         let is_mainnet = self.http_client.is_mainnet();
-        Ok((sign_l1_action(built_order.wallet, connection_id, is_mainnet)?, action))
+        Ok((
+            sign_l1_action(built_order.wallet, connection_id, is_mainnet)?,
+            action,
+        ))
     }
 
     pub async fn bulk_order_with_builder(
