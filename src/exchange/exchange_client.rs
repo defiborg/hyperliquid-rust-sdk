@@ -421,11 +421,11 @@ impl ExchangeClient {
     {
         let built_order_response = self.build_order(orders, wallet)?;
 
-        let (signature, action_value) =
+        let signature =
             self.generate_signature_for_transaction(&built_order_response)?;
 
         Ok(self
-            .send_signed_order(action_value, built_order_response.timestamp, signature)
+            .send_signed_order(&built_order_response.actions, built_order_response.timestamp, signature)
             .await?)
     }
 
@@ -465,28 +465,29 @@ impl ExchangeClient {
 
     pub async fn send_signed_order(
         &self,
-        action: Value,
+        action: &Actions,
         timestamp: u64,
         signature: Signature,
     ) -> Result<ExchangeResponseStatus> {
+        let action = serde_json::to_value(&action)
+            .map_err(|e| Error::JsonParse(e.to_string()))?;
+
         Ok(self.post(action, signature, timestamp).await?)
     }
 
     pub fn generate_signature_for_transaction(
         &self,
         built_order: &BuiltOrderResponse,
-    ) -> Result<(Signature, Value)> {
+    ) -> Result<Signature> {
         let connection_id = built_order
             .actions
             .hash(built_order.timestamp, self.vault_address)?;
-        let action = serde_json::to_value(&built_order.actions)
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
+        
 
         let is_mainnet = self.http_client.is_mainnet();
-        Ok((
-            sign_l1_action(built_order.wallet, connection_id, is_mainnet)?,
-            action,
-        ))
+        Ok(
+            sign_l1_action(built_order.wallet, connection_id, is_mainnet)?
+        )
     }
 
     pub async fn bulk_order_with_builder(
@@ -880,10 +881,9 @@ mod tests {
 
         assert_eq!(built_order_response.wallet.address(), H160::from_str("0xcd49bbac6e85fdeb167eb7ca41a945d2b8758f6f").unwrap());
 
-        let (signature, action_value) = test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
+        let signature = test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
 
         assert_eq!(signature.to_string().len(), 130);
-        assert_eq!(action_value["type"], "order".to_string());
 
         Ok(())
     }
