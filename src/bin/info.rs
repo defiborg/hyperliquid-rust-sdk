@@ -1,5 +1,7 @@
+use std::hash::DefaultHasher;
+
 use ethers::types::H160;
-use hyperliquid_rust_sdk::{BaseUrl, InfoClient};
+use hyperliquid_rust_sdk::{BaseUrl, InfoClient, ValidOrderID};
 use log::info;
 
 const ADDRESS: &str = "0xc64cc00b46101bd40aa1c3121195e85c0b0918d8";
@@ -96,6 +98,7 @@ async fn all_mids_example(info_client: &InfoClient) {
 
 async fn user_fills_example(info_client: &InfoClient) {
     let user = address();
+    //let user = TEST_ADDRESS.to_string().parse().unwrap();
 
     info!(
         "User fills data for {user}: {:?}",
@@ -160,10 +163,12 @@ async fn spot_meta_and_asset_contexts_example(info_client: &InfoClient) {
 }
 
 async fn query_order_by_oid_example(info_client: &InfoClient) {
+    // let user = TEST_ADDRESS.to_string().parse().unwrap();
     let user = address();
-    let oid = 26342632321;
+    let oid = ValidOrderID::CustomOrderID("0x0000000000000000002bdc546291f4b1".to_string());
+
     info!(
-        "Order status for {user} for oid {oid}: {:?}",
+        "Order status for {user} for oid {:?}: {:?}", oid.clone(), 
         info_client.query_order_by_oid(user, oid).await.unwrap()
     );
 }
@@ -177,6 +182,7 @@ async fn query_referral_state_example(info_client: &InfoClient) {
 }
 
 async fn historical_orders_example(info_client: &InfoClient) {
+    // let user = TEST_ADDRESS.to_string().parse().unwrap();
     let user = address();
     info!(
         "Historical orders for {user}: {:?}",
