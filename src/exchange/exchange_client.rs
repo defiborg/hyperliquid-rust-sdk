@@ -38,8 +38,8 @@ use super::{BuilderInfo, ClientLimit, ClientOrder};
 #[derive(Debug, Clone)]
 pub struct BuiltOrderResponse<'a> {
     pub timestamp: u64,
-    pub wallet: &'a Wallet<SigningKey>,
-    actions: Actions,
+    wallet: &'a Wallet<SigningKey>,
+    pub actions: Actions,
 }
 
 #[derive(Debug)]
