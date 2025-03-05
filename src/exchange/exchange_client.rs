@@ -37,8 +37,8 @@ use super::{BuilderInfo, ClientLimit, ClientOrder};
 
 #[derive(Debug, Clone)]
 pub struct BuiltOrderResponse<'a> {
-    timestamp: u64,
-    wallet: &'a Wallet<SigningKey>,
+    pub timestamp: u64,
+    pub wallet: &'a Wallet<SigningKey>,
     actions: Actions,
 }
 
@@ -884,7 +884,7 @@ mod tests {
 
         assert_eq!(signature.to_string().len(), 130);
         assert_eq!(action_value["type"], "order".to_string());
-        
+
         Ok(())
     }
 
