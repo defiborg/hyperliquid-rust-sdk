@@ -35,6 +35,7 @@ use super::cancel::ClientCancelRequestCloid;
 use super::order::{ConvertOrder, MarketCloseParams, MarketOrderParams};
 use super::{BuilderInfo, ClientLimit, ClientOrder};
 
+#[derive(Debug, Clone)]
 pub struct BuiltOrderResponse<'a> {
     timestamp: u64,
     wallet: &'a Wallet<SigningKey>,
@@ -852,6 +853,39 @@ mod tests {
         priv_key
             .parse::<LocalWallet>()
             .map_err(|e| Error::Wallet(e.to_string()))
+    }
+
+    #[tokio::test]
+    async fn build_and_sign_order_manually() -> Result<()> {
+        let wallet = &get_wallet()?;
+
+        let test_exchange_client = ExchangeClient::new(None, wallet.clone(), None, None, None).await?;
+
+        let test_client_order = ClientOrderRequest {
+            asset: "BTC".to_string(),
+            is_buy: true,
+            reduce_only: false,
+            limit_px: "2000.0".to_string(),
+            sz: "3.5".to_string(),
+            cloid: None,
+            order_type: ClientOrder::Limit(ClientLimit {
+                tif: "Ioc".to_string(),
+            }),
+        };
+
+        let test_orders = vec![test_client_order];
+
+        let built_order_response = test_exchange_client.build_order(test_orders, Some(wallet))?;
+
+
+        assert_eq!(built_order_response.wallet.address(), H160::from_str("0xcd49bbac6e85fdeb167eb7ca41a945d2b8758f6f").unwrap());
+
+        let (signature, action_value) = test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
+
+        assert_eq!(signature.to_string().len(), 130);
+        assert_eq!(action_value["type"], "order".to_string());
+        
+        Ok(())
     }
 
     #[test]
