@@ -35,6 +35,18 @@ pub enum ValidOrderID {
     OrderID(u64),
 }
 
+impl From<String> for ValidOrderID {
+    fn from(order_id_string: String) -> Self {
+        ValidOrderID::CustomOrderID(order_id_string)
+    }
+}
+
+impl From<u64> for ValidOrderID {
+    fn from(order_id: u64) -> Self {
+        ValidOrderID::OrderID(order_id)
+    }
+}
+
 #[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
