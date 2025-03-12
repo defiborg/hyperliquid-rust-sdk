@@ -115,7 +115,7 @@ pub struct UserTokenBalance {
     pub total: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderInfo {
     pub order: BasicOrderInfo,
@@ -123,7 +123,7 @@ pub struct OrderInfo {
     pub status_timestamp: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct BasicOrderInfo {
     pub coin: String,
