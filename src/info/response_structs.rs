@@ -39,7 +39,7 @@ pub struct OpenOrdersResponse {
     pub timestamp: u64,
 }
 
-#[derive(serde::Deserialize, Debug)]
+#[derive(serde::Deserialize, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct UserFillsResponse {
     pub closed_pnl: String,
