@@ -40,6 +40,7 @@ impl From<&str> for ValidOrderID {
         ValidOrderID::CustomOrderID(order_id_string.to_string())
     }
 }
+
 impl From<String> for ValidOrderID {
     fn from(order_id_string: String) -> Self {
         ValidOrderID::CustomOrderID(order_id_string)
