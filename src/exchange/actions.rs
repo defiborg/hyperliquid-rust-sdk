@@ -94,7 +94,7 @@ pub struct UpdateIsolatedMargin {
     pub ntli: i64,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone)]
+#[derive(Serialize, Deserialize, Debug, Clone, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct BulkOrder {
     pub orders: Vec<OrderRequest>,
