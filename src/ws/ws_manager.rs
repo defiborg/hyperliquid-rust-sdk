@@ -46,7 +46,7 @@ pub(crate) struct WsManager {
     subscription_identifiers: HashMap<u32, String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum Subscription {
