@@ -32,7 +32,7 @@ pub struct AllMidsData {
     pub mids: HashMap<String, String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, Clone, Debug, PartialEq)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeInfo {
     pub coin: String,
