@@ -52,7 +52,7 @@ pub struct ExchangeClient {
     pub coin_to_asset: HashMap<String, u32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
    pub action: serde_json::Value,
