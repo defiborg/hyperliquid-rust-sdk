@@ -64,7 +64,7 @@ pub enum Subscription {
     ActiveAssetCtx { coin: String },
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(tag = "channel")]
 #[serde(rename_all = "camelCase")]
 pub enum Message {

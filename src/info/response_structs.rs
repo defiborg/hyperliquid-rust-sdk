@@ -4,7 +4,7 @@ use crate::{
 };
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserStateResponse {
     pub asset_positions: Vec<AssetPosition>,
@@ -13,12 +13,12 @@ pub struct UserStateResponse {
     pub withdrawable: String,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct UserTokenBalanceResponse {
     pub balances: Vec<UserTokenBalance>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserFeesResponse {
     pub active_referral_discount: String,
@@ -65,7 +65,7 @@ pub struct FundingHistoryResponse {
     pub time: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct UserFundingResponse {
     pub time: u64,
     pub hash: String,
@@ -115,7 +115,7 @@ pub struct CandlesSnapshotResponse {
     pub num_trades: u64,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct OrderStatusResponse {
     pub status: String,
     /// `None` if the order is not found
@@ -123,7 +123,7 @@ pub struct OrderStatusResponse {
     pub order: Option<OrderInfo>,
 }
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ReferralResponse {
     pub referred_by: Option<Referrer>,
