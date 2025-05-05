@@ -2,7 +2,7 @@ use ethers::types::H160;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct Trade {
     pub coin: String,
     pub side: String,
@@ -13,26 +13,26 @@ pub struct Trade {
     pub tid: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct BookLevel {
     pub px: String,
     pub sz: String,
     pub n: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct L2BookData {
     pub coin: String,
     pub time: u64,
     pub levels: Vec<Vec<BookLevel>>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct AllMidsData {
     pub mids: HashMap<String, String>,
 }
 
-#[derive(Deserialize, Clone, Debug, PartialEq)]
+#[derive(Deserialize, Clone, Debug, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct TradeInfo {
     pub coin: String,
@@ -51,7 +51,7 @@ pub struct TradeInfo {
     pub tid: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserFillsData {
     pub is_snapshot: Option<bool>,
@@ -59,7 +59,7 @@ pub struct UserFillsData {
     pub fills: Vec<TradeInfo>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub enum UserData {
     Fills(Vec<TradeInfo>),
@@ -68,7 +68,7 @@ pub enum UserData {
     NonUserCancel(Vec<NonUserCancel>),
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct Liquidation {
     pub lid: u64,
     pub liquidator: String,
@@ -77,13 +77,13 @@ pub struct Liquidation {
     pub liquidated_account_value: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct NonUserCancel {
     pub coin: String,
     pub oid: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct CandleData {
     #[serde(rename = "T")]
     pub time_close: u64,
@@ -107,7 +107,7 @@ pub struct CandleData {
     pub volume: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct OrderUpdate {
     pub order: BasicOrder,
@@ -115,7 +115,7 @@ pub struct OrderUpdate {
     pub status_timestamp: u64,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct BasicOrder {
     pub coin: String,
@@ -128,7 +128,7 @@ pub struct BasicOrder {
     pub cloid: Option<String>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserFundingsData {
     pub is_snapshot: Option<bool>,
@@ -136,7 +136,7 @@ pub struct UserFundingsData {
     pub fundings: Vec<UserFunding>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserFunding {
     pub time: u64,
@@ -146,7 +146,7 @@ pub struct UserFunding {
     pub funding_rate: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct UserNonFundingLedgerUpdatesData {
     pub is_snapshot: Option<bool>,
@@ -154,14 +154,14 @@ pub struct UserNonFundingLedgerUpdatesData {
     pub non_funding_ledger_updates: Vec<LedgerUpdateData>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct LedgerUpdateData {
     pub time: u64,
     pub hash: String,
     pub delta: LedgerUpdate,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 #[serde(tag = "type")]
 pub enum LedgerUpdate {
@@ -180,19 +180,19 @@ pub enum LedgerUpdate {
     SpotGenesis(SpotGenesis),
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct Deposit {
     pub usdc: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct Withdraw {
     pub usdc: String,
     pub nonce: u64,
     pub fee: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct InternalTransfer {
     pub usdc: String,
     pub user: H160,
@@ -200,14 +200,14 @@ pub struct InternalTransfer {
     pub fee: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct SubAccountTransfer {
     pub usdc: String,
     pub user: H160,
     pub destination: H160,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct LedgerLiquidation {
     pub account_value: u64,
@@ -215,19 +215,19 @@ pub struct LedgerLiquidation {
     pub liquidated_positions: Vec<LiquidatedPosition>,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct LiquidatedPosition {
     pub coin: String,
     pub szi: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct VaultDelta {
     pub vault: H160,
     pub usdc: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct VaultWithdraw {
     pub vault: H160,
@@ -239,20 +239,20 @@ pub struct VaultWithdraw {
     pub net_withdrawn_usd: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct VaultLeaderCommission {
     pub user: H160,
     pub usdc: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AccountClassTransfer {
     pub usdc: String,
     pub to_perp: bool,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotTransfer {
     pub token: String,
@@ -263,24 +263,24 @@ pub struct SpotTransfer {
     pub fee: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct SpotGenesis {
     pub token: String,
     pub amount: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 pub struct NotificationData {
     pub notification: String,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct WebData2Data {
     pub user: H160,
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct ActiveAssetCtxData {
     pub coin: String,

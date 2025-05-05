@@ -2,7 +2,7 @@ use crate::{prelude::*, BaseUrl, Error};
 use reqwest::{Client, Response};
 use serde::Deserialize;
 
-#[derive(Deserialize, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 struct ErrorData {
     data: String,
     code: u16,
