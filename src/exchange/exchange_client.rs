@@ -419,13 +419,16 @@ impl ExchangeClient {
     where
         ClientOrderRequest<T>: ConvertOrder,
     {
-        let built_order_response = self.build_order(orders, wallet)?;
+        let built_order_response = self.build_order(orders, wallet, None)?;
 
-        let signature =
-            self.generate_signature_for_transaction(&built_order_response)?;
+        let signature = self.generate_signature_for_transaction(&built_order_response)?;
 
         Ok(self
-            .send_signed_order(&built_order_response.actions, built_order_response.timestamp, signature)
+            .send_signed_order(
+                &built_order_response.actions,
+                built_order_response.timestamp,
+                signature,
+            )
             .await?)
     }
 
@@ -436,6 +439,7 @@ impl ExchangeClient {
         &'a self,
         orders: Vec<ClientOrderRequest<T>>,
         wallet: Option<&'a LocalWallet>,
+        builder: Option<BuilderInfo>,
     ) -> Result<BuiltOrderResponse<'a>>
     where
         ClientOrderRequest<T>: ConvertOrder,
@@ -451,7 +455,7 @@ impl ExchangeClient {
         let actions = Actions::Order(BulkOrder {
             orders: transformed_orders,
             grouping: "na".to_string(),
-            builder: None,
+            builder,
         });
 
         let timestamp = next_nonce();
@@ -469,8 +473,7 @@ impl ExchangeClient {
         timestamp: u64,
         signature: Signature,
     ) -> Result<ExchangeResponseStatus> {
-        let action = serde_json::to_value(&action)
-            .map_err(|e| Error::JsonParse(e.to_string()))?;
+        let action = serde_json::to_value(&action).map_err(|e| Error::JsonParse(e.to_string()))?;
 
         Ok(self.post(action, signature, timestamp).await?)
     }
@@ -482,12 +485,13 @@ impl ExchangeClient {
         let connection_id = built_order
             .actions
             .hash(built_order.timestamp, self.vault_address)?;
-        
 
         let is_mainnet = self.http_client.is_mainnet();
-        Ok(
-            sign_l1_action(built_order.wallet, connection_id, is_mainnet)?
-        )
+        Ok(sign_l1_action(
+            built_order.wallet,
+            connection_id,
+            is_mainnet,
+        )?)
     }
 
     pub async fn bulk_order_with_builder(
@@ -860,7 +864,8 @@ mod tests {
     async fn build_and_sign_order_manually() -> Result<()> {
         let wallet = &get_wallet()?;
 
-        let test_exchange_client = ExchangeClient::new(None, wallet.clone(), None, None, None).await?;
+        let test_exchange_client =
+            ExchangeClient::new(None, wallet.clone(), None, None, None).await?;
 
         let test_client_order = ClientOrderRequest {
             asset: "BTC".to_string(),
@@ -876,12 +881,16 @@ mod tests {
 
         let test_orders = vec![test_client_order];
 
-        let built_order_response = test_exchange_client.build_order(test_orders, Some(wallet))?;
+        let built_order_response =
+            test_exchange_client.build_order(test_orders, Some(wallet), None)?;
 
+        assert_eq!(
+            built_order_response.wallet.address(),
+            H160::from_str("0xcd49bbac6e85fdeb167eb7ca41a945d2b8758f6f").unwrap()
+        );
 
-        assert_eq!(built_order_response.wallet.address(), H160::from_str("0xcd49bbac6e85fdeb167eb7ca41a945d2b8758f6f").unwrap());
-
-        let signature = test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
+        let signature =
+            test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
 
         assert_eq!(signature.to_string().len(), 130);
 
