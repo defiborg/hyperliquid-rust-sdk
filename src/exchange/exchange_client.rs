@@ -1,3 +1,4 @@
+
 use crate::signature::sign_typed_data;
 use crate::{
     exchange::{
@@ -51,13 +52,13 @@ pub struct ExchangeClient {
     pub coin_to_asset: HashMap<String, u32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
-    action: serde_json::Value,
-    signature: Signature,
-    nonce: u64,
-    vault_address: Option<H160>,
+   pub action: serde_json::Value,
+   pub signature: Signature,
+   pub nonce: u64,
+   pub vault_address: Option<H160>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
