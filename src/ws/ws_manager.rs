@@ -37,7 +37,7 @@ struct SubscriptionData {
     subscription_id: u32,
     id: String,
 }
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub(crate) struct WsManager {
     stop_flag: Arc<AtomicBool>,
     writer: Arc<Mutex<SplitSink<WebSocketStream<MaybeTlsStream<TcpStream>>, protocol::Message>>>,
@@ -46,7 +46,7 @@ pub(crate) struct WsManager {
     subscription_identifiers: HashMap<u32, String>,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Serialize, Deserialize, Debug, Clone)]
 #[serde(tag = "type")]
 #[serde(rename_all = "camelCase")]
 pub enum Subscription {
@@ -64,7 +64,7 @@ pub enum Subscription {
     ActiveAssetCtx { coin: String },
 }
 
-#[derive(Deserialize, Clone, Debug)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(tag = "channel")]
 #[serde(rename_all = "camelCase")]
 pub enum Message {

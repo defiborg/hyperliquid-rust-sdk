@@ -1,14 +1,14 @@
 use std::collections::HashMap;
 
 use ethers::abi::ethereum_types::H128;
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct Meta {
     pub universe: Vec<AssetMeta>,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 pub struct SpotMeta {
     pub universe: Vec<SpotAssetMeta>,
     pub tokens: Vec<TokenInfo>,
@@ -45,14 +45,14 @@ impl SpotMeta {
     }
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(untagged)]
 pub enum SpotMetaAndAssetCtxs {
     SpotMeta(SpotMeta),
     Context(Vec<SpotAssetContext>),
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, serde::Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotAssetContext {
     pub day_ntl_vlm: String,
@@ -63,14 +63,14 @@ pub struct SpotAssetContext {
     pub coin: String,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct AssetMeta {
     pub name: String,
     pub sz_decimals: u32,
 }
 
-#[derive(Deserialize, Debug, Clone)]
+#[derive(Deserialize, Serialize, Debug, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct SpotAssetMeta {
     pub tokens: [usize; 2],
@@ -79,7 +79,7 @@ pub struct SpotAssetMeta {
     pub is_canonical: bool,
 }
 
-#[derive(Debug, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase")]
 pub struct TokenInfo {
     pub name: String,

@@ -1,3 +1,4 @@
+
 use crate::signature::sign_typed_data;
 use crate::{
     exchange::{
@@ -18,6 +19,8 @@ use crate::{
     BaseUrl, BulkCancelCloid, Error, ExchangeResponseStatus,
 };
 use crate::{ClassTransfer, SpotSend, SpotUser, VaultTransfer, Withdraw3};
+use ethers::core::k256::ecdsa::SigningKey;
+use ethers::signers::Wallet;
 use ethers::{
     abi::AbiEncode,
     signers::{LocalWallet, Signer},
@@ -26,11 +29,19 @@ use ethers::{
 use log::debug;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
+use serde_json::Value;
 use std::collections::HashMap;
 
 use super::cancel::ClientCancelRequestCloid;
-use super::order::{MarketCloseParams, MarketOrderParams};
+use super::order::{ConvertOrder, MarketCloseParams, MarketOrderParams};
 use super::{BuilderInfo, ClientLimit, ClientOrder};
+
+#[derive(Debug, Clone)]
+pub struct BuiltOrderResponse<'a> {
+    pub timestamp: u64,
+    wallet: &'a Wallet<SigningKey>,
+    pub actions: Actions,
+}
 
 #[derive(Debug)]
 pub struct ExchangeClient {
@@ -41,13 +52,13 @@ pub struct ExchangeClient {
     pub coin_to_asset: HashMap<String, u32>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 #[serde(rename_all = "camelCase")]
 pub struct ExchangePayload {
-    action: serde_json::Value,
-    signature: Signature,
-    nonce: u64,
-    vault_address: Option<H160>,
+   pub action: serde_json::Value,
+   pub signature: Signature,
+   pub nonce: u64,
+   pub vault_address: Option<H160>,
 }
 
 #[derive(Serialize, Deserialize, Debug, Clone)]
@@ -380,11 +391,14 @@ impl ExchangeClient {
         Ok((px, sz_decimals))
     }
 
-    pub async fn order(
+    pub async fn order<'a, T>(
         &self,
-        order: ClientOrderRequest,
-        wallet: Option<&LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> {
+        order: ClientOrderRequest<T>,
+        wallet: Option<&'a LocalWallet>,
+    ) -> Result<ExchangeResponseStatus>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
         self.bulk_order(vec![order], wallet).await
     }
 
@@ -398,13 +412,40 @@ impl ExchangeClient {
             .await
     }
 
-    pub async fn bulk_order(
+    pub async fn bulk_order<'a, T>(
         &self,
-        orders: Vec<ClientOrderRequest>,
-        wallet: Option<&LocalWallet>,
-    ) -> Result<ExchangeResponseStatus> {
+        orders: Vec<ClientOrderRequest<T>>,
+        wallet: Option<&'a LocalWallet>,
+    ) -> Result<ExchangeResponseStatus>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
+        let built_order_response = self.build_order(orders, wallet, None)?;
+
+        let signature = self.generate_signature_for_transaction(&built_order_response)?;
+
+        Ok(self
+            .send_signed_order(
+                &built_order_response.actions,
+                built_order_response.timestamp,
+                signature,
+            )
+            .await?)
+    }
+
+    /// This works in our instance, however this does mean that wallet and self share the same lifetime? Which means we create a reference to wallet at the same time as the exchange client then we are all fine
+    /// In our instance we create wallet and exchange client at similar times therefore the lifetime is valid
+    /// Also wallet is not used here in this instance, we pass none into this function and used the wallet created at instantiation
+    pub fn build_order<'a, T>(
+        &'a self,
+        orders: Vec<ClientOrderRequest<T>>,
+        wallet: Option<&'a LocalWallet>,
+        builder: Option<BuilderInfo>,
+    ) -> Result<BuiltOrderResponse<'a>>
+    where
+        ClientOrderRequest<T>: ConvertOrder,
+    {
         let wallet = wallet.unwrap_or(&self.wallet);
-        let timestamp = next_nonce();
 
         let mut transformed_orders = Vec::new();
 
@@ -412,17 +453,46 @@ impl ExchangeClient {
             transformed_orders.push(order.convert(&self.coin_to_asset)?);
         }
 
-        let action = Actions::Order(BulkOrder {
+        let actions = Actions::Order(BulkOrder {
             orders: transformed_orders,
             grouping: "na".to_string(),
-            builder: None,
+            builder,
         });
-        let connection_id = action.hash(timestamp, self.vault_address)?;
+
+        let timestamp = next_nonce();
+
+        Ok(BuiltOrderResponse {
+            timestamp,
+            wallet,
+            actions,
+        })
+    }
+
+    pub async fn send_signed_order(
+        &self,
+        action: &Actions,
+        timestamp: u64,
+        signature: Signature,
+    ) -> Result<ExchangeResponseStatus> {
         let action = serde_json::to_value(&action).map_err(|e| Error::JsonParse(e.to_string()))?;
 
+        Ok(self.post(action, signature, timestamp).await?)
+    }
+
+    pub fn generate_signature_for_transaction(
+        &self,
+        built_order: &BuiltOrderResponse,
+    ) -> Result<Signature> {
+        let connection_id = built_order
+            .actions
+            .hash(built_order.timestamp, self.vault_address)?;
+
         let is_mainnet = self.http_client.is_mainnet();
-        let signature = sign_l1_action(wallet, connection_id, is_mainnet)?;
-        self.post(action, signature, timestamp).await
+        Ok(sign_l1_action(
+            built_order.wallet,
+            connection_id,
+            is_mainnet,
+        )?)
     }
 
     pub async fn bulk_order_with_builder(
@@ -789,6 +859,43 @@ mod tests {
         priv_key
             .parse::<LocalWallet>()
             .map_err(|e| Error::Wallet(e.to_string()))
+    }
+
+    #[tokio::test]
+    async fn build_and_sign_order_manually() -> Result<()> {
+        let wallet = &get_wallet()?;
+
+        let test_exchange_client =
+            ExchangeClient::new(None, wallet.clone(), None, None, None).await?;
+
+        let test_client_order = ClientOrderRequest {
+            asset: "BTC".to_string(),
+            is_buy: true,
+            reduce_only: false,
+            limit_px: "2000.0".to_string(),
+            sz: "3.5".to_string(),
+            cloid: None,
+            order_type: ClientOrder::Limit(ClientLimit {
+                tif: "Ioc".to_string(),
+            }),
+        };
+
+        let test_orders = vec![test_client_order];
+
+        let built_order_response =
+            test_exchange_client.build_order(test_orders, Some(wallet), None)?;
+
+        assert_eq!(
+            built_order_response.wallet.address(),
+            H160::from_str("0xcd49bbac6e85fdeb167eb7ca41a945d2b8758f6f").unwrap()
+        );
+
+        let signature =
+            test_exchange_client.generate_signature_for_transaction(&built_order_response)?;
+
+        assert_eq!(signature.to_string().len(), 130);
+
+        Ok(())
     }
 
     #[test]

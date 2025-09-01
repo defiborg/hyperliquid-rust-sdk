@@ -12,6 +12,7 @@ use crate::{
 };
 
 use ethers::types::H160;
+use log::info;
 use reqwest::Client;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -24,6 +25,32 @@ pub struct CandleSnapshotRequest {
     interval: String,
     start_time: u64,
     end_time: u64,
+}
+
+// TODO: Add match statement to cast
+#[derive(Deserialize, Serialize, Debug, Clone, PartialEq)]
+#[serde(untagged)]
+pub enum ValidOrderID {
+    CustomOrderID(String),
+    OrderID(u64),
+}
+
+impl From<&str> for ValidOrderID {
+    fn from(order_id_string: &str) -> Self {
+        ValidOrderID::CustomOrderID(order_id_string.to_string())
+    }
+}
+
+impl From<String> for ValidOrderID {
+    fn from(order_id_string: String) -> Self {
+        ValidOrderID::CustomOrderID(order_id_string)
+    }
+}
+
+impl From<u64> for ValidOrderID {
+    fn from(order_id: u64) -> Self {
+        ValidOrderID::OrderID(order_id)
+    }
 }
 
 #[derive(Deserialize, Serialize, Debug, Clone)]
@@ -50,7 +77,7 @@ pub enum InfoRequest {
     },
     OrderStatus {
         user: H160,
-        oid: u64,
+        oid: ValidOrderID,
     },
     Meta,
     SpotMeta,
@@ -89,7 +116,7 @@ pub enum InfoRequest {
     },
 }
 
-#[derive(Debug)]
+#[derive(Debug, Clone)]
 pub struct InfoClient {
     pub http_client: HttpClient,
     pub(crate) ws_manager: Option<WsManager>,
@@ -281,8 +308,10 @@ impl InfoClient {
         self.send_info_request(input).await
     }
 
-    pub async fn query_order_by_oid(&self, address: H160, oid: u64) -> Result<OrderStatusResponse> {
+    pub async fn query_order_by_oid(&self, address: H160, oid: ValidOrderID) -> Result<OrderStatusResponse> {
+        info!("Querying order by oid: {:?}", oid);
         let input = InfoRequest::OrderStatus { user: address, oid };
+        info!("Sending...: {:?}", input);
         self.send_info_request(input).await
     }
 
