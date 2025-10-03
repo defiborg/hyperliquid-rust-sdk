@@ -77,18 +77,20 @@ pub fn bps_diff(x: f64, y: f64) -> u16 {
 }
 
 #[derive(Copy, Clone, Debug, PartialEq)]
-pub enum BaseUrl {
+pub enum BaseUrl<'a> {
     Localhost,
     Testnet,
     Mainnet,
+    Custom(&'a str)
 }
 
-impl BaseUrl {
+impl<'a> BaseUrl<'a> {
     pub(crate) fn get_url(&self) -> String {
         match self {
             BaseUrl::Localhost => LOCAL_API_URL.to_string(),
             BaseUrl::Mainnet => MAINNET_API_URL.to_string(),
             BaseUrl::Testnet => TESTNET_API_URL.to_string(),
+            BaseUrl::Custom(url) => url.to_string(),
         }
     }
 }

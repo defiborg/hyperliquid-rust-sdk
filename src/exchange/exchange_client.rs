@@ -100,7 +100,7 @@ impl ExchangeClient {
     pub async fn new(
         client: Option<Client>,
         wallet: LocalWallet,
-        base_url: Option<BaseUrl>,
+        base_url: Option<BaseUrl<'_>>,
         meta: Option<Meta>,
         vault_address: Option<H160>,
     ) -> Result<ExchangeClient> {
