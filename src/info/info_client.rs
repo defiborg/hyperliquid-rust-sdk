@@ -308,7 +308,11 @@ impl InfoClient {
         self.send_info_request(input).await
     }
 
-    pub async fn query_order_by_oid(&self, address: H160, oid: ValidOrderID) -> Result<OrderStatusResponse> {
+    pub async fn query_order_by_oid(
+        &self,
+        address: H160,
+        oid: ValidOrderID,
+    ) -> Result<OrderStatusResponse> {
         info!("Querying order by oid: {:?}", oid);
         let input = InfoRequest::OrderStatus { user: address, oid };
         info!("Sending...: {:?}", input);

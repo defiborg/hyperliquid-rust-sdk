@@ -1,5 +1,3 @@
-use std::hash::DefaultHasher;
-
 use ethers::types::H160;
 use hyperliquid_rust_sdk::{BaseUrl, InfoClient, ValidOrderID};
 use log::info;
@@ -168,7 +166,8 @@ async fn query_order_by_oid_example(info_client: &InfoClient) {
     let oid = ValidOrderID::CustomOrderID("0x0000000000000000002bdc546291f4b1".to_string());
 
     info!(
-        "Order status for {user} for oid {:?}: {:?}", oid.clone(), 
+        "Order status for {user} for oid {:?}: {:?}",
+        oid.clone(),
         info_client.query_order_by_oid(user, oid).await.unwrap()
     );
 }

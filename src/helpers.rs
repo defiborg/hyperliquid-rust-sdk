@@ -81,7 +81,7 @@ pub enum BaseUrl {
     Localhost,
     Testnet,
     Mainnet,
-    Custom(&'static str)
+    Custom(&'static str),
 }
 
 impl BaseUrl {
